@@ -15,5 +15,4 @@ private:
     std::vector<std::vector<char>> buffers;
     std::vector<std::vector<char>> host_buffers;
     std::vector<cudaEvent_t> timers;
-
-}
+};
