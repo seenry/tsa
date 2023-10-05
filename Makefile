@@ -6,7 +6,7 @@ INC = -I./include -I$(NCCL)/include -I/usr/lib/x86_64-linux-gnu/openmpi/include
 LNK = -L$(NCCL)/lib -lmpi -lnccl -lm
 
 bin: build/main.o build/gpu_network.o
-	$(CC) $(LNK) $^ -l $@
+	$(CC) $(LNK) $^ -o $@
 
 build/%.o: src/%.cpp | subdirs
 	$(CC) $(INC) -c $^ -o $@
