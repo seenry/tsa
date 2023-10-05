@@ -1,7 +1,9 @@
 CC = nvcc
 
-INC = -I./include -I$(NCCL_INC) -I/usr/lib/x86_64-linux-gnu/openmpi/include
-LNK = -L$(NCCL_LIB) -lmpi -lnccl -lm
+NCCL ?= /home/ubuntu/nccl/build
+
+INC = -I./include -I$(NCCL)/include -I/usr/lib/x86_64-linux-gnu/openmpi/include
+LNK = -L$(NCCL)/lib -lmpi -lnccl -lm
 
 bin: build/main.o build/gpu_network.o
 	$(CC) $(LNK) $^ -l $@
@@ -16,4 +18,3 @@ clean:
 
 subdirs:
 	mkdir -p build
-	
