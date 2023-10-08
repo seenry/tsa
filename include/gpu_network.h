@@ -10,7 +10,9 @@ public:
     void AllGather();
     void Initialize();
 private:
-    std::vector<ncclComm_t> comms;
+    int n_dev;
+
+    ncclComm_t comms;
     std::vector<cudaStream_t> streams;
     std::vector<std::vector<char>> buffers;
     std::vector<std::vector<char>> host_buffers;
