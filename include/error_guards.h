@@ -1,4 +1,6 @@
 #pragma once
+#include <stdlib.h>
+#include <stdio.h>
 
 #define CUDACHECK(cmd) do { \
     cudaError_t err = cmd; \

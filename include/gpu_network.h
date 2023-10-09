@@ -8,13 +8,13 @@ class GPUNetwork
 {
 public:
     void AllGather();
-    void Initialize();
+    void Initialize(int buffer_size);
 private:
     int n_dev;
 
     ncclComm_t comms;
-    std::vector<cudaStream_t> streams;
-    std::vector<std::vector<char>> buffers;
-    std::vector<std::vector<char>> host_buffers;
-    std::vector<cudaEvent_t> timers;
+    cudaStream_t* streams;
+    char** buffers;
+    char** host_buffers;
+    cudaEvent_t timers;
 };
