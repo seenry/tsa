@@ -11,6 +11,7 @@ public:
     
     void Point2Point(); // Measure all p2p connections
     void AllGather(); //
+    void Print();
 private:
     void Point2PointSingle(int from, int to);
     void Point2PointBidirectional(int rank_1, int rank_2);

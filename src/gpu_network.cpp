@@ -1,5 +1,6 @@
 #include <vector>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include "nccl.h"
 #include "mpi.h"
@@ -49,7 +50,7 @@ void GPUNetwork::Point2Point() {
 
     
     for (int i = 0; i < (n_ranks_ - 1); i++) {
-        for (int j = 0; j < n_ranks_; j++) {
+        for (int j = i + 1; j < n_ranks_; j++) {
             Point2PointBidirectional(i, j)                                                          ;
             if (rank_ == i || rank_ == j) {
                 cudaEventElapsedTime(p2p_bi_times_ + (i * n_ranks_ + j), start_timer_, stop_timer_) ;
@@ -70,6 +71,31 @@ void GPUNetwork::AllGather() {
     CUDACHECK(cudaEventRecord(stop_timer_, stream_))                                                    ;
     CUDACHECK(cudaEventSynchronize(stop_timer_))                                                        ;
     cudaEventElapsedTime(&ag_time_, start_timer_, stop_timer_)                                          ;
+}
+
+void GPUNetwork::Print() {
+    printf("Unidirectional P2P:");
+    for (int i = 0; i < n_ranks_; i++) {
+        for (int j = 0; j < n_ranks_; j++) {
+            if (i != j) {
+                printf("%6.2f ", p2p_uni_times_[i * n_ranks_ + j]);
+            } else {
+                printf("0.0000 ");
+            }
+        }
+        printf("\n");
+    }
+    printf("\nBidirectional P2P:");
+    for (int i = 0; i < (n_ranks_ - 1); i++) {
+        for (int j = 0; j < i; j++) {
+            printf("       ");
+        }
+        for (int j = i + 1; j < n_ranks_; j++) {
+            printf("%6.2f ", p2p_bi_times_[i * n_ranks_ + j]);
+        }
+        printf("\n");
+    }
+    printf("\nAll Gather: %f", ag_time_);
 }
 
 void GPUNetwork::Point2PointSingle(int from, int to) {
