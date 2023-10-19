@@ -103,7 +103,7 @@ void GPUNetwork::Print() {
         for (int i = 0; i < (n_ranks_ - 1); i++) {
             for (int j = i + 1; j < n_ranks_; j++) {
                 fprintf(file_ptr, "%d,%d,%d,%f,%f,%f,%f\n",
-                        i, j, kBufferSize,
+                        i, j, kBufferSize * 2,
                         (aggregated_bi_times_[i * n_ranks_ * n_ranks_ + i * n_ranks_ + j] +
                          aggregated_bi_times_[j * n_ranks_ * n_ranks_ + i * n_ranks_ + j]) / 2,
                         (aggregated_bi_times_[i * n_ranks_ * n_ranks_ + i * n_ranks_ + j] +
@@ -150,6 +150,11 @@ void GPUNetwork::Cleanup() {
 
     free(p2p_uni_times_);
     free(p2p_bi_times_);
+    if (rank_ == 0) {
+        free(aggregated_uni_times_);
+        free(aggregated_bi_times_);
+        free(aggregated_ag_times_);
+    }
 
     ncclCommDestroy(comm_);
     MPI_Finalize();
@@ -160,51 +165,40 @@ void GPUNetwork::Cleanup() {
 ///////////////////////////////////////////////////////////////////////////////
 void GPUNetwork::ProfileCollective(void (GPUNetwork::* call)(void*), void* args) {
     NCCLCHECK(ncclGroupStart());
-    for (int i = 0; i < kWarmupIters; i++) {
-        (this->*call)(args);
-    }
+        for (int i = 0; i < kWarmupIters; i++) { (this->*call)(args); }
     NCCLCHECK(ncclGroupEnd());
     CUDACHECK(cudaEventRecord(start_timer_));
     NCCLCHECK(ncclGroupStart());
-    for (int i = 0; i < kTimingIters; i++) {
-        (this->*call)(args);
-    }
+        for (int i = 0; i < kTimingIters; i++) { (this->*call)(args); }
     NCCLCHECK(ncclGroupEnd());
     CUDACHECK(cudaEventRecord(stop_timer_));
     CUDACHECK(cudaEventSynchronize(stop_timer_));
 }
 
 void GPUNetwork::P2PUniCall(void* args) {
-    int from = ((int*) args)[0];
-    int to = ((int*) args)[1];
-    if (rank_ == from) {
+    int from = ((int*) args)[0]; int to = ((int*) args)[1];
+
+    if (rank_ == from)
         NCCLCHECK(ncclSend(buffer_, kBufferSize, ncclUint8, to, comm_, stream_));
-    } else if (rank_ == to) {
+    else if (rank_ == to)
         NCCLCHECK(ncclRecv(buffer_, kBufferSize, ncclUint8, from, comm_, stream_));
-    }
 }
 
 void GPUNetwork::P2PBiCall(void* args) {
-    int rank_1 = ((int*) args)[0];
-    int rank_2 = ((int*) args)[1];
+    int rank_1 = ((int*) args)[0]; int rank_2 = ((int*) args)[1];
+
     if (rank_ == rank_1) {
         NCCLCHECK(ncclSend(buffer_, kBufferSize, ncclUint8, rank_2, comm_, stream_));
         NCCLCHECK(ncclRecv(buffer_, kBufferSize, ncclUint8, rank_2, comm_, stream_));
-    } else if (rank_ == rank_2) {
+    }
+    else if (rank_ == rank_2) {
         NCCLCHECK(ncclRecv(buffer_, kBufferSize, ncclUint8, rank_1, comm_, stream_));
         NCCLCHECK(ncclSend(buffer_, kBufferSize, ncclUint8, rank_1, comm_, stream_));
     }
 }
 
 void GPUNetwork::AllGatherCall(void* args) {
-    NCCLCHECK(ncclAllGather(
-        buffer_ + rank_ * (kBufferSize >> 2),
-        buffer_,
-        kBufferSize >> 2,
-        ncclUint8,
-        comm_,
-        stream_
-    ));
+    NCCLCHECK(ncclAllGather(buffer_ + rank_ * (kBufferSize >> 2), buffer_, kBufferSize >> 2, ncclUint8, comm_, stream_));
 }
 
 void GPUNetwork::WriteTime(float* address, int scale) {
