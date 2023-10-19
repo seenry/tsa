@@ -4,19 +4,25 @@
 
 #include "nccl.h"
 
-class GPUNetwork
-{
+class GPUNetwork {
 public:
     void Initialize();
     
-    void Point2Point(); // Measure all p2p connections
-    void AllGather(); //
+    void Point2Point();
+    void AllGather();
+    void GatherData();
     void Print();
+
+    void Cleanup();
 private:
-    void Point2PointSingle(int from, int to);
-    void Point2PointBidirectional(int rank_1, int rank_2);
+    void ProfileCollective(void (GPUNetwork::* call)(void*), void* args);
+    void P2PUniCall(void* args);
+    void P2PBiCall(void* args);
+    void AllGatherCall(void* args);
+    void WriteTime(float* address, int scale);
 
     const int kTimingIters = 128;
+    const int kWarmupIters = 8;
     const int kBufferSize = 1 << 23;
 
     int n_ranks_;
@@ -33,4 +39,8 @@ private:
     float* p2p_uni_times_;
     float* p2p_bi_times_;
     float ag_time_;
+
+    float* aggregated_uni_times_;
+    float* aggregated_bi_times_;
+    float* aggregated_ag_times_;
 };
