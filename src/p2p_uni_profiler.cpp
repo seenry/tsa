@@ -34,25 +34,22 @@ void P2PUniProfiler::ProfileOperation() {
     for (int iter = 0; iter < n_iter_; iter++) {
     for (int rank_1 = 0; rank_1 < (net_->size_ - 1); rank_1++) {
     for (int rank_2 = rank_1 + 1; rank_2 < net_->size_; rank_2++) {
-        if (net_->rank_ == rank_1 || net_->rank_ == rank_2) {
-            idx = rank_1 * net_->size_ + rank_2;
-            fg = idx < (net_->rank_ * net_->size_ + net_->rank_);
-            OperationCall(rank_1, rank_2, 1 << iter);
-            RecordTime(
-                op_times_[iter] + fg * net_->size_ * net_->size_ + idx,
-                kTimingIters
-            );
+    if (net_->rank_ == rank_1 || net_->rank_ == rank_2) {
+        idx = rank_1 * net_->size_ + rank_2;
+        fg = idx < (net_->rank_ * net_->size_ + net_->rank_);
+        OperationCall(rank_1, rank_2, 1 << iter);
+        RecordTime(
+            op_times_[iter] + fg * net_->size_ * net_->size_ + idx,
+            kTimingIters
+        );
 
-            idx = rank_2 * net_->size_ + rank_1;
-            OperationCall(rank_2, rank_1, 1 << iter);
-            RecordTime(
-                op_times_[iter] + fg * net_->size_ * net_->size_ + idx,
-                kTimingIters
-            );
-        }
-    }
-    }
-    }
+        idx = rank_2 * net_->size_ + rank_1;
+        OperationCall(rank_2, rank_1, 1 << iter);
+        RecordTime(
+            op_times_[iter] + fg * net_->size_ * net_->size_ + idx,
+            kTimingIters
+        );
+    }}}}
 };
 
 void P2PUniProfiler::GatherResults() {
@@ -80,10 +77,7 @@ void P2PUniProfiler::PrintResults() {
                 fmax(output[i][j * net_->size_ + k], output[i][net_->size_ * net_->size_ + j * net_->size_ + k]),
                 (output[i][j * net_->size_ + k] + output[i][net_->size_ * net_->size_ + j * net_->size_ + k]) / 2
             );
-        }
-        }
-        }
-        }
+        }}}}
         fclose(f);
     }
 }

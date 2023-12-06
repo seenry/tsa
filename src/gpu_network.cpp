@@ -23,7 +23,7 @@ void GPUNetwork::Initialize() {
 
     CUDACHECK(cudaSetDevice(rank_));
     CUDACHECK(cudaMalloc(&buffer_, kBufferSize * sizeof(char)));
-    CUDACHECK(cudaMemset(buffer_, rank_, kBufferSize * sizeof(char)));
+    // CUDACHECK(cudaMemset(buffer_, rank_, kBufferSize * sizeof(char)));
     CUDACHECK(cudaStreamCreate(&stream_));
     CUDACHECK(cudaEventCreate(&start_timer_));
     CUDACHECK(cudaEventCreate(&stop_timer_));
