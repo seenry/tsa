@@ -7,19 +7,15 @@
 
 class IProfiler {
 public:
-    virtual void Initialize(GPUNetwork* network);
+    virtual void Initialize(GPUNetwork* network) = 0;
 
     virtual void ProfileOperation() = 0;
     virtual void GatherResults() = 0;
     virtual void PrintResults() = 0;
 
-    void Cleanup() {
-        for (int i = 0; i < n_iter_; i++) {
-            free(op_times_[i]);
-        }
-        free(op_times_);
-    };
-
+    virtual void Cleanup() = 0;
+    
+protected:
     void RecordTime(float* address, int scale) {
         CUDACHECK(cudaEventElapsedTime(address, net_->start_timer_, net_->stop_timer_));
         *address /= (float) scale;
@@ -31,5 +27,6 @@ public:
     GPUNetwork* net_;
 
     float** op_times_;
+    float** output;
     int n_iter_;
 };

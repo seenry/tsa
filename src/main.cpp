@@ -13,8 +13,11 @@ int main(int argc, char* argv[]) {
     p.Initialize(&g);
 
     p.ProfileOperation();
+    p.GatherResults();
+    p.PrintResults();
 
     p.Cleanup();
-    g.Cleanup();
+    // g.Cleanup();
+    MPI_Finalize();
     return 0;
 }

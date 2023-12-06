@@ -17,6 +17,7 @@ void GPUNetwork::Initialize() {
     MPICHECK(MPI_Barrier(MPI_COMM_WORLD));
 
     if (rank_ == 0) {
+        printf("Initializing\n");
         NCCLCHECK(ncclGetUniqueId(&id_));
     }
     MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, MPI_COMM_WORLD);
@@ -37,6 +38,5 @@ void GPUNetwork::Cleanup() {
     CUDACHECK(cudaEventDestroy(start_timer_));
     CUDACHECK(cudaEventDestroy(stop_timer_));
 
-    ncclCommDestroy(comm_);
-    MPI_Finalize();
+    NCCLCHECK(ncclCommDestroy(comm_));
 }
