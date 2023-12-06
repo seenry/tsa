@@ -19,7 +19,7 @@ void GPUNetwork::Initialize() {
     if (rank_ == 0) {
         NCCLCHECK(ncclGetUniqueId(&id_));
     }
-    MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, MPI_COMM_WORLD);
+    MPICHECK(MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, MPI_COMM_WORLD));
 
     CUDACHECK(cudaSetDevice(rank_));
     CUDACHECK(cudaMalloc(&buffer_, kBufferSize * sizeof(char)));
