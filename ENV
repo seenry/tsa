@@ -1,1 +1,0 @@
-export PMIX_MCA_pcompress_base_silence_warning=1
