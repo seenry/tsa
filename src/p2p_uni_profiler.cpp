@@ -36,7 +36,7 @@ void P2PUniProfiler::ProfileOperation() {
     for (int rank_2 = rank_1 + 1; rank_2 < net_->size_; rank_2++) {
         if (net_->rank_ == rank_1 || net_->rank_ == rank_2) {
             idx = rank_1 * net_->size_ + rank_2;
-            fg = idx > (net_->rank_ * net_->size_ + net_->rank_);
+            fg = idx < (net_->rank_ * net_->size_ + net_->rank_);
             OperationCall(rank_1, rank_2, 1 << iter);
             RecordTime(
                 op_times_[iter] + fg * net_->size_ * net_->size_ + idx,
@@ -57,43 +57,18 @@ void P2PUniProfiler::ProfileOperation() {
 
 void P2PUniProfiler::GatherResults() {
     for (int i = 0; i < n_iter_; i++) {
-        NCCLCHECK(ncclReduce(
-            (void*) (op_times_[i]), (void*) (output[i]),
+        MPICHECK(MPI_Reduce(
+            op_times_[i], output[i],
             2 * net_->size_ * net_->size_,
-            ncclFloat32, ncclMax,
-            0, net_->comm_, net_->stream_
+            MPI_FLOAT, MPI_SUM,
+            0, MPI_COMM_WORLD
         ));
     }
 }
 
 void P2PUniProfiler::PrintResults() {
-    for (int i = 0; i < net_->size_; i++) {
-        if (net_->rank_ == i) {
-            FILE* f;
-            if (i != 0) {
-                f = fopen("out.txt", "a");
-            } else {
-                f = fopen("out.txt", "w");
-            }
-
-            fprintf(f, "rank: %d\n", i);
-            for (int j = 0; j < n_iter_; j++) {
-                fprintf(f, "%d bytes:\n", 1 << j);
-                for (int k = 0; k < (net_->size_ * 2); k++) {
-                    for (int l = 0; l < net_->size_; l++) {
-                        fprintf(f, "%f ", op_times_[j][k * net_->size_ + l]);
-                    }
-                    fprintf(f, "\n");
-                }
-                fprintf(f, "\n");
-            }
-            fclose(f);
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-    }
-
     if (net_->rank_ == 0) {
-        FILE* f = fopen("aggregated.txt", "w");
+        FILE* f = fopen("out.txt", "w");
         for (int i = 0; i < n_iter_; i++) {
             fprintf(f, "%d bytes:\n", 1 << i);
             for (int j = 0; j < (net_->size_ * 2); j++) {
@@ -105,20 +80,6 @@ void P2PUniProfiler::PrintResults() {
             fprintf(f, "\n\n");
         }
         fclose(f);
-    }
-}
-
-void P2PUniProfiler::Cleanup() {
-    for (int i = 0; i < n_iter_; i++) {
-        free(op_times_[i]);
-    }
-    free(op_times_);
-
-    if (net_->rank_ == 0) {
-        for (int i = 0; i < n_iter_; i++) {
-            free(output[i]);
-        }
-        free(output);
     }
 }
 

@@ -13,7 +13,19 @@ public:
     virtual void GatherResults() = 0;
     virtual void PrintResults() = 0;
 
-    virtual void Cleanup() = 0;
+    virtual void Cleanup() {
+        for (int i = 0; i < n_iter_; i++) {
+            free(op_times_[i]);
+        }
+        free(op_times_);
+
+        if (net_->rank_ == 0) {
+            for (int i = 0; i < n_iter_; i++) {
+                free(output[i]);
+            }
+            free(output);
+        }
+    };
     
 protected:
     void RecordTime(float* address, int scale) {

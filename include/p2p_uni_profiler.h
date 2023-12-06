@@ -21,8 +21,6 @@ public:
     void GatherResults();
     void PrintResults();
     
-    void Cleanup();
-    
 private:
     void OperationCall(int rank_1, int rank_2, int msg_size);
     void SingleCall(int rank_1, int rank_2, int msg_size);

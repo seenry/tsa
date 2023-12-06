@@ -17,7 +17,6 @@ void GPUNetwork::Initialize() {
     MPICHECK(MPI_Barrier(MPI_COMM_WORLD));
 
     if (rank_ == 0) {
-        printf("Initializing\n");
         NCCLCHECK(ncclGetUniqueId(&id_));
     }
     MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, MPI_COMM_WORLD);

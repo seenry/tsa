@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
     p.PrintResults();
 
     p.Cleanup();
-    // g.Cleanup();
+    g.Cleanup();
     MPI_Finalize();
     return 0;
 }
