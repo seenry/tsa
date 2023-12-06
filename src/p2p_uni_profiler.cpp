@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <math.h>
+#include <cmath>
 
 #include "nccl.h"
 
@@ -68,16 +68,21 @@ void P2PUniProfiler::GatherResults() {
 
 void P2PUniProfiler::PrintResults() {
     if (net_->rank_ == 0) {
-        FILE* f = fopen("out.txt", "w");
+        FILE* f = fopen("p2p_uni.csv", "w");
+        fprintf(f, "n_bytes, from, to, min, max, avg\n");
         for (int i = 0; i < n_iter_; i++) {
-            fprintf(f, "%d bytes:\n", 1 << i);
-            for (int j = 0; j < (net_->size_ * 2); j++) {
-                for (int k = 0; k < net_->size_; k++) {
-                    fprintf(f, "%f ", output[i][j * net_->size_ + k]);
-                }
-                fprintf(f, "\n");
-            }
-            fprintf(f, "\n\n");
+        for (int j = 0; j < net_->size_; j++) {
+        for (int k = 0; k < net_->size_; k++) {
+        if (j != k) {
+            fprintf(f, "%ld, %d, %d, %f, %f, %f\n",
+                sizeof(float) << i, j, k,
+                fmin(output[i][j * net_->size_ + k], output[i][net_->size_ * net_->size_ + j * net_->size_ + k]),
+                fmax(output[i][j * net_->size_ + k], output[i][net_->size_ * net_->size_ + j * net_->size_ + k]),
+                (output[i][j * net_->size_ + k] + output[i][net_->size_ * net_->size_ + j * net_->size_ + k]) / 2
+            );
+        }
+        }
+        }
         }
         fclose(f);
     }

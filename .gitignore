@@ -1,5 +1,4 @@
 build/*
 bin
 *.csv
-*.txt
 ENV
