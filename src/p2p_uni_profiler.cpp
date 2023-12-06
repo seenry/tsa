@@ -72,7 +72,7 @@ void P2PUniProfiler::PrintResults() {
         for (int k = 0; k < net_->size_; k++) {
         if (j != k) {
             fprintf(f, "%ld, %d, %d, %f, %f, %f\n",
-                sizeof(float) << i, j, k,
+                1 << i, j, k,
                 fmin(output[i][j * net_->size_ + k], output[i][net_->size_ * net_->size_ + j * net_->size_ + k]),
                 fmax(output[i][j * net_->size_ + k], output[i][net_->size_ * net_->size_ + j * net_->size_ + k]),
                 (output[i][j * net_->size_ + k] + output[i][net_->size_ * net_->size_ + j * net_->size_ + k]) / 2
