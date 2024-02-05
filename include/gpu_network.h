@@ -7,7 +7,7 @@
 class GPUNetwork {
 public:
     void Initialize();
-    void Cleanup();
+    void Destroy();
 
     const int kBufferSize = 1 << 23;
 

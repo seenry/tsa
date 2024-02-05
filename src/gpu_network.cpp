@@ -31,7 +31,7 @@ void GPUNetwork::Initialize() {
     NCCLCHECK(ncclCommInitRank(&comm_, size_, id_, rank_));
 }
 
-void GPUNetwork::Cleanup() {
+void GPUNetwork::Destroy() {
     CUDACHECK(cudaFree(buffer_));
     CUDACHECK(cudaStreamDestroy(stream_));
     CUDACHECK(cudaEventDestroy(start_timer_));

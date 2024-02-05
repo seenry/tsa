@@ -13,7 +13,7 @@ public:
     virtual void GatherResults() = 0;
     virtual void PrintResults() = 0;
 
-    virtual void Cleanup() {
+    virtual void Destroy() {
         for (int i = 0; i < n_iter_; i++) {
             free(op_times_[i]);
         }
