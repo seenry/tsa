@@ -2,8 +2,6 @@
 #include <algorithm>
 #include <stdlib.h>
 #include <stdio.h>
-#include <stdint.h>
-#include <unistd.h>
 #include <math.h>
 
 #include "nccl.h"
@@ -16,33 +14,6 @@ void GPUNetwork::Initialize() {
     MPICHECK(MPI_Init(NULL, NULL));
     MPICHECK(MPI_Comm_rank(MPI_COMM_WORLD, &rank_));
     MPICHECK(MPI_Comm_size(MPI_COMM_WORLD, &size_));
-
-    uint64_t host_hashes[size_];
-    char hostname[1024];
-    gethostname(hostname, 1024);
-    for (int i = 0; i < 1024; i++) {
-        if (hostname[i] == '.') {
-            hostname[i] = '\0';
-            break;
-        }
-    }
-    uint64_t host_hash = 5381;
-    for (int i = 0; hostname[i] != '\0', i++) {
-        host_hash = ((host_hash << 5) + host_hash) ^ hostname[i];
-    }
-    host_hashes[rank_] = host_hash;
-    MPICHECK(MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, host_hashes, sizeof(uint64_t), MPI_BYTE, MPI_COMM_WORLD));
-    
-    local_rank = 0;
-    for (int i = 0; i < size_; i++) {
-        if (i == rank_) {
-            break;
-        }
-        if (host_hashes[i] == host_hashes[rank_]) {
-            local_rank++;
-        }
-    }
-
     MPICHECK(MPI_Barrier(MPI_COMM_WORLD));
 
     if (rank_ == 0) {
@@ -50,7 +21,7 @@ void GPUNetwork::Initialize() {
     }
     MPICHECK(MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, MPI_COMM_WORLD));
 
-    CUDACHECK(cudaSetDevice(local_rank));
+    CUDACHECK(cudaSetDevice(rank_));
     CUDACHECK(cudaMalloc(&buffer_, kBufferSize * sizeof(char)));
     // CUDACHECK(cudaMemset(buffer_, rank_, kBufferSize * sizeof(char)));
     CUDACHECK(cudaStreamCreate(&stream_));
