@@ -21,4 +21,7 @@ public:
     char* host_buffer_;
     cudaEvent_t start_timer_;
     cudaEvent_t stop_timer_;
+
+private:
+    void SetGPU();
 };

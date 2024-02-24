@@ -17,28 +17,7 @@ void GPUNetwork::Initialize() {
     MPICHECK(MPI_Comm_rank(MPI_COMM_WORLD, &rank_));
     MPICHECK(MPI_Comm_size(MPI_COMM_WORLD, &size_));
     
-    uint64_t hosthashes[size_];
-    char hostname[1024];
-    gethostname(hostname, 1024);
-    for (int i = 0; i < 1024; i++) {
-		if (hostname[i] == '.') {
-			hostname[i] = '\0';
-			break;
-		}
-	}
-	uint64_t hosthash = 5381;
-	for (int i = 0; hostname[i] != '\0'; i++) {
-		hosthash = ((hosthash << 5) + hosthash) ^ hostname[i];
-	}
-	hosthashes[rank_] = hosthash;
-	MPICHECK(MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, hosthashes, sizeof(uint64_t), MPI_BYTE, MPI_COMM_WORLD));
-
-	local_rank = 0;
-	for (int i = 0; i < size_; i++) {
-		if (i == rank_) break;
-		if (hosthashes[i] == hosthashes[rank_]) local_rank++;
-	}
-
+    SetGPU();
     MPICHECK(MPI_Barrier(MPI_COMM_WORLD));
 
     if (rank_ == 0) {
@@ -46,7 +25,6 @@ void GPUNetwork::Initialize() {
     }
     MPICHECK(MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, MPI_COMM_WORLD));
 
-    CUDACHECK(cudaSetDevice(local_rank));
     CUDACHECK(cudaMalloc(&buffer_, kBufferSize * sizeof(char)));
     // CUDACHECK(cudaMemset(buffer_, rank_, kBufferSize * sizeof(char)));
     CUDACHECK(cudaStreamCreate(&stream_));
@@ -63,4 +41,29 @@ void GPUNetwork::Cleanup() {
     CUDACHECK(cudaEventDestroy(stop_timer_));
 
     NCCLCHECK(ncclCommDestroy(comm_));
+}
+
+void GPUNetwork::SetGPU() {
+    uint64_t hosthashes[size_];
+    char hostname[1024];
+    gethostname(hostname, 1024);
+    for (int i = 0; i < 1024; i++) {
+		if (hostname[i] == '.') {
+			hostname[i] = '\0';
+			break;
+		}
+	}
+	uint64_t hosthash = 5381;
+	for (int i = 0; hostname[i] != '\0'; i++) {
+		hosthash = ((hosthash << 5) + hosthash) ^ hostname[i];
+	}
+	hosthashes[rank_] = hosthash;
+	MPICHECK(MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, hosthashes, sizeof(uint64_t), MPI_BYTE, MPI_COMM_WORLD));
+
+	int device_id = 0;
+	for (int i = 0; i < size_; i++) {
+		if (i == rank_) break;
+		if (hosthashes[i] == hosthashes[rank_]) device_id++;
+	}
+    CUDACHECK(cudaSetDevice(device_id));
 }
