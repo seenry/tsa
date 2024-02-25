@@ -12,7 +12,8 @@ public:
     const int kBufferSize = 1 << 23;
 
     int size_;
-    int rank_;
+    int node_rank_;
+    int local_rank_;
 
     ncclUniqueId id_;
     ncclComm_t comm_;

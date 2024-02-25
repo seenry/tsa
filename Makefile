@@ -1,6 +1,6 @@
 CC = nvcc
 
-NCCL ?= /home/seanr/nccl/build
+NCCL ?= /home/scr2448/nccl/build
 MPI ?= /usr/local
 
 INC = -I./include -I$(NCCL)/include -I$(MPI)/include
@@ -15,7 +15,7 @@ build/%.o: src/%.cpp | subdirs
 .PHONY: clean subdirs load
 
 clean:
-	rm -f bin build/*.o
+	rm -f links build/*.o
 
 subdirs:
 	mkdir -p build
