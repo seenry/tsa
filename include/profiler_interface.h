@@ -19,7 +19,7 @@ public:
         }
         free(op_times_);
 
-        if (net_->rank_ == 0) {
+        if (net_->node_rank_ == 0) {
             for (int i = 0; i < n_iter_; i++) {
                 free(output[i]);
             }

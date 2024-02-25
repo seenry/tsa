@@ -1,7 +1,7 @@
 CC = nvcc
 
-NCCL ?= /home/ubuntu/nccl/build
-MPI ?= /opt/amazon/openmpi
+NCCL ?= /home/scr2448/nccl/build
+MPI ?= /usr/local
 
 INC = -I./include -I$(NCCL)/include -I$(MPI)/include
 LNK = -L$(MPI)/lib -lmpi -L$(NCCL)/lib -lnccl -lm
@@ -15,7 +15,7 @@ build/%.o: src/%.cpp | subdirs
 .PHONY: clean subdirs
 
 clean:
-	rm -f bin build/*.o
+	rm -f links build/*.o
 
 subdirs:
 	mkdir -p build
