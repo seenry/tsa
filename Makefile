@@ -12,7 +12,7 @@ links: build/main.o build/gpu_network.o build/p2p_uni_profiler.o
 build/%.o: src/%.cpp | subdirs
 	$(CC) $(INC) -c $^ -o $@
 
-.PHONY: clean subdirs
+.PHONY: clean subdirs load
 
 clean:
 	rm -f links build/*.o

@@ -16,7 +16,7 @@ void GPUNetwork::Initialize() {
     MPICHECK(MPI_Init(NULL, NULL));
     MPICHECK(MPI_Comm_rank(MPI_COMM_WORLD, &node_rank_));
     MPICHECK(MPI_Comm_size(MPI_COMM_WORLD, &size_));
-
+  
     SetGPU();
 
     if (node_rank_ == 0) {
