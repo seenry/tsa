@@ -15,7 +15,7 @@ build/%.o: src/%.cpp | subdirs
 .PHONY: clean subdirs
 
 clean:
-	rm -f bin build/*.o
+	rm -f links build/*.o
 
 subdirs:
 	mkdir -p build

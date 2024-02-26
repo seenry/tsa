@@ -1,3 +1,5 @@
 links
 build/
 *.csv
+set_env
+*.out
