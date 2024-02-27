@@ -17,11 +17,6 @@ void GPUNetwork::Initialize() {
 
     DetermineRank();
 
-    if (rank_ == 0) {
-        NCCLCHECK(ncclGetUniqueId(&id_));
-    }
-    MPICHECK(MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, mpi_comm_));
-
     CUDACHECK(cudaMalloc(&buffer_, kBufferSize * sizeof(char)));
     // CUDACHECK(cudaMemset(buffer_, rank_, kBufferSize * sizeof(char)));
     CUDACHECK(cudaStreamCreate(&stream_));
@@ -59,7 +54,8 @@ void GPUNetwork::DetermineRank() {
     for (int i = 0; hostname[i] != '\0'; i++) {
         hosthash = ((hosthash << 5) + hosthash) ^ hostname[i];
     }
-    hosthashes[global_rank] = hosthash & 0x7fffffff;
+    hosthash &= 0x7fffffff;
+    hosthashes[global_rank] = hosthash;
     MPICHECK(MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, hosthashes, sizeof(int), MPI_BYTE, MPI_COMM_WORLD));
 
     int local_rank = 0;
@@ -83,7 +79,6 @@ void GPUNetwork::DetermineRank() {
     int node_size;
     MPICHECK(MPI_Comm_size(node_comm, &node_size));
     rank_ = node_id * (node_size >> 1) + (local_rank >> 1);
-    CUDACHECK(cudaSetDevice(local_rank >> 1));
 
     // Get two identical communicators
     // GPU on rank_i in one mpi_comm_ should correspond to same GPU on rank_i in other mpi_comm_
@@ -94,6 +89,13 @@ void GPUNetwork::DetermineRank() {
     MPICHECK(MPI_Bcast((void*) &comm_rank_, sizeof(comm_rank_), MPI_BYTE, 0, mpi_comm_));
 
     printf("Process %d on %s (%d). GPU %d/%d for comm %d\n", global_rank, hostname, node_id, rank_, size_ - 1, comm_rank_);
+
+    if (rank_ == 0) {
+        NCCLCHECK(ncclGetUniqueId(&id_));
+    }
+    MPICHECK(MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, mpi_comm_));
+
+    CUDACHECK(cudaSetDevice(local_rank >> 1));
 
     MPICHECK(MPI_Comm_free(&node_comm));
     MPICHECK(MPI_Comm_free(&leader_comm));
