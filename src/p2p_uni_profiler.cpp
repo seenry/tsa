@@ -16,14 +16,18 @@ void P2PUniProfiler::Initialize(GPUNetwork* network) {
     }
 
     op_times_ = (float**) malloc(n_iter_ * sizeof(float*));
+    CheckAlloc(op_times_, "Operation Times Array");
     for (int i = 0; i < n_iter_; i++) {
         op_times_[i] = (float*) calloc(2 * net_->size_ * net_->size_, sizeof(float));
+        CheckAlloc(op_times_[i], "Operation Time Matrix");
     }
 
-        output = (float**) malloc(n_iter_ * sizeof(float*));
-        for (int i = 0; i < n_iter_; i++) {
-            output[i] = (float*) calloc(2 * net_->size_ * net_->size_, sizeof(float));
-        }
+    output = (float**) malloc(n_iter_ * sizeof(float*));
+    CheckAlloc(output, "outputs");
+    for (int i = 0; i < n_iter_; i++) {
+        output[i] = (float*) calloc(2 * net_->size_ * net_->size_, sizeof(float));
+        CheckAlloc(output[i], "output");
+    }
 }
 
 void P2PUniProfiler::ProfileOperation() {
@@ -98,9 +102,9 @@ void P2PUniProfiler::OperationCall(int rank_1, int rank_2, int msg_size) {
 
 void P2PUniProfiler::SingleCall(int rank_1, int rank_2, int msg_size) {
     if (net_->rank_ == rank_1) {
-        NCCLCHECK(ncclSend(net_->buffer_, msg_size, ncclUint8, rank_2, net_->comm_, net_->stream_));
+        NCCLCHECK(ncclSend(net_->buffer_, msg_size, ncclUint8, rank_2, net_->comms_[0], net_->streams_[0]));
     } else if (net_->rank_ == rank_2) {
-        NCCLCHECK(ncclRecv(net_->buffer_, msg_size, ncclUint8, rank_1, net_->comm_, net_->stream_));
+        NCCLCHECK(ncclRecv(net_->buffer_, msg_size, ncclUint8, rank_1, net_->comms_[0], net_->streams_[0]));
     }
 }
 

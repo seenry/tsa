@@ -26,22 +26,35 @@ void GPUNetwork::Initialize() {
     }
     MPICHECK(MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, MPI_COMM_WORLD));
 
+    streams_ = (cudaStream_t*) malloc(2 * sizeof(cudaStream_t));
+    CheckAlloc(streams_, "streams");
+
+    comms_ = (ncclComm_t*) malloc(2 * sizeof(ncclComm_t));
+    CheckAlloc(comms_, "nccl comms");
+
     CUDACHECK(cudaMalloc(&buffer_, kBufferSize * sizeof(char)));
     // CUDACHECK(cudaMemset(buffer_, rank_, kBufferSize * sizeof(char)));
-    CUDACHECK(cudaStreamCreate(&stream_));
+    CUDACHECK(cudaStreamCreate(&(streams_[0])));
+    CUDACHECK(cudaStreamCreate(&(streams_[1])));
     CUDACHECK(cudaEventCreate(&start_timer_));
     CUDACHECK(cudaEventCreate(&stop_timer_));
 
-    NCCLCHECK(ncclCommInitRank(&comm_, size_, id_, rank_));
+    NCCLCHECK(ncclCommInitRank(&(comms_[0]), size_, id_, rank_));
+    NCCLCHECK(ncclCommInitRank(&(comms_[1]), size_, id_, rank_));
 }
 
 void GPUNetwork::Cleanup() {
     CUDACHECK(cudaFree(buffer_));
-    CUDACHECK(cudaStreamDestroy(stream_));
+    CUDACHECK(cudaStreamDestroy(streams_[0]));
+    CUDACHECK(cudaStreamDestroy(streams_[1]));
     CUDACHECK(cudaEventDestroy(start_timer_));
     CUDACHECK(cudaEventDestroy(stop_timer_));
 
-    NCCLCHECK(ncclCommDestroy(comm_));
+    NCCLCHECK(ncclCommDestroy(comms_[0]));
+    NCCLCHECK(ncclCommDestroy(comms_[1]));
+
+    free(streams_);
+    free(comms_);
 }
 
 void GPUNetwork::SetGPU() {
