@@ -29,11 +29,4 @@
     } \
 } while (0)
 
-void CheckAlloc(void* ptr, char* blame) {
-    if (ptr == NULL) {
-        printf("malloc failed: %s\n", blame);
-        exit(-1);
-    }
-}
-
-
+void CheckAlloc(void* ptr, const char* blame);

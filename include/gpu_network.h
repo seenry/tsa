@@ -15,9 +15,9 @@ public:
     int rank_;
     int local_rank_;
 
-    ncclUniqueId id_;
-    ncclComm_t* comms_;
-    cudaStream_t* streams_;
+    ncclUniqueId ids_[2];
+    ncclComm_t comms_[2];
+    cudaStream_t streams_[2];
     char* buffer_;
     char* host_buffer_;
     cudaEvent_t start_timer_;

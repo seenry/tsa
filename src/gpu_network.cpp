@@ -22,15 +22,11 @@ void GPUNetwork::Initialize() {
     MPICHECK(MPI_Barrier(MPI_COMM_WORLD));
 
     if (rank_ == 0) {
-        NCCLCHECK(ncclGetUniqueId(&id_));
+        NCCLCHECK(ncclGetUniqueId(&ids_[0]));
+        NCCLCHECK(ncclGetUniqueId(&ids_[1]));
     }
-    MPICHECK(MPI_Bcast((void*) &id_, sizeof(id_), MPI_BYTE, 0, MPI_COMM_WORLD));
-
-    streams_ = (cudaStream_t*) malloc(2 * sizeof(cudaStream_t));
-    CheckAlloc(streams_, "streams");
-
-    comms_ = (ncclComm_t*) malloc(2 * sizeof(ncclComm_t));
-    CheckAlloc(comms_, "nccl comms");
+    MPICHECK(MPI_Bcast((void*) &(ids_[0]), sizeof(ids_[0]), MPI_BYTE, 0, MPI_COMM_WORLD));
+    MPICHECK(MPI_Bcast((void*) &(ids_[1]), sizeof(ids_[1]), MPI_BYTE, 0, MPI_COMM_WORLD));
 
     CUDACHECK(cudaMalloc(&buffer_, kBufferSize * sizeof(char)));
     // CUDACHECK(cudaMemset(buffer_, rank_, kBufferSize * sizeof(char)));
@@ -39,8 +35,8 @@ void GPUNetwork::Initialize() {
     CUDACHECK(cudaEventCreate(&start_timer_));
     CUDACHECK(cudaEventCreate(&stop_timer_));
 
-    NCCLCHECK(ncclCommInitRank(&(comms_[0]), size_, id_, rank_));
-    NCCLCHECK(ncclCommInitRank(&(comms_[1]), size_, id_, rank_));
+    NCCLCHECK(ncclCommInitRank(&(comms_[0]), size_, ids_[0], rank_));
+    NCCLCHECK(ncclCommInitRank(&(comms_[1]), size_, ids_[1], rank_));
 }
 
 void GPUNetwork::Cleanup() {
@@ -52,9 +48,6 @@ void GPUNetwork::Cleanup() {
 
     NCCLCHECK(ncclCommDestroy(comms_[0]));
     NCCLCHECK(ncclCommDestroy(comms_[1]));
-
-    free(streams_);
-    free(comms_);
 }
 
 void GPUNetwork::SetGPU() {
