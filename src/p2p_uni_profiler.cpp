@@ -23,12 +23,13 @@ void P2PUniProfiler::Initialize(GPUNetwork* network) {
         CheckAlloc(op_times_[i], "p2p profiler operation time matrix");
     }
 
-    printf("(%d, %d)\n", net_->rank_, net_->local_rank_);
     output = (float**) malloc(n_iter_ * sizeof(float*));
-    CheckAlloc(output, "p2p profiler outputs");
-    for (int i = 0; i < n_iter_; i++) {
-        output[i] = (float*) calloc(2 * net_->size_ * net_->size_, sizeof(float));
-        CheckAlloc(output[i], "p2p profiler output");
+    if (net_->rank_ == 0) {
+        CheckAlloc(output, "p2p profiler outputs");
+        for (int i = 0; i < n_iter_; i++) {
+            output[i] = (float*) calloc(2 * net_->size_ * net_->size_, sizeof(float));
+            CheckAlloc(output[i], "p2p profiler output");
+        }
     }
 }
 
