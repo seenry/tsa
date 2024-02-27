@@ -24,5 +24,5 @@ public:
     cudaEvent_t stop_timer_;
 
 private:
-    void DetermineRank();
+    void SetUpComms();
 };
