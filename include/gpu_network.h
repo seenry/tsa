@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-
 #include "nccl.h"
 
 class GPUNetwork {
