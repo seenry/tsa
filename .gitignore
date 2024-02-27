@@ -3,3 +3,4 @@ build/
 *.csv
 set_env
 *.out
+core.*

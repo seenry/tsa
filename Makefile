@@ -12,10 +12,13 @@ links: build/main.o build/error_guards.o build/gpu_network.o build/p2p_uni_profi
 build/%.o: src/%.cpp | subdirs
 	$(CC) $(INC) -c $^ -o $@
 
-.PHONY: clean subdirs
+.PHONY: clean clear subdirs
 
 clean:
-	rm -f links build/*.o p2p_uni.csv
+	rm -f links build/*.o
+
+clear:
+	rm -f p2p_uni.csv slurm-*
 
 subdirs:
 	mkdir -p build
