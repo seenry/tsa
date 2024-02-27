@@ -46,7 +46,7 @@ void GPUNetwork::DetermineRank() {
     MPICHECK(MPI_Comm_rank(MPI_COMM_WORLD, &global_rank));
 
     // Find rank within node
-    uint64_t hosthashes[global_size];
+    int hosthashes[global_size];
     char hostname[1024];
     gethostname(hostname, 1024);
     for (int i = 0; i < 1024; i++) {
@@ -55,12 +55,12 @@ void GPUNetwork::DetermineRank() {
             break;
         }
     }
-    uint64_t hosthash = 5381;
+    int hosthash = 5381;
     for (int i = 0; hostname[i] != '\0'; i++) {
         hosthash = ((hosthash << 5) + hosthash) ^ hostname[i];
     }
-    hosthashes[global_rank] = hosthash;
-    MPICHECK(MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, hosthashes, sizeof(uint64_t), MPI_BYTE, MPI_COMM_WORLD));
+    hosthashes[global_rank] = hosthash & 0x7fffffff;
+    MPICHECK(MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, hosthashes, sizeof(int), MPI_BYTE, MPI_COMM_WORLD));
 
     int local_rank = 0;
     for (int i = 0; i < global_size; i++) {
