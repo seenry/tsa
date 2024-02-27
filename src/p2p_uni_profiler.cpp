@@ -11,22 +11,22 @@
 void P2PUniProfiler::Initialize(GPUNetwork* network) {
     net_ = network;
 
-    n_iter_ = 0;
+    n_msg_ = 0;
     for (int i = 1; i <= net_->kBufferSize; i <<= 1) {
-        n_iter_++;
+        n_msg_++;
     }
 
-    op_times_ = (float**) malloc(n_iter_ * sizeof(float*));
+    op_times_ = (float**) malloc(n_msg_ * sizeof(float*));
     CheckAlloc(op_times_, "p2p profiler operation times array");
-    for (int i = 0; i < n_iter_; i++) {
+    for (int i = 0; i < n_msg_; i++) {
         op_times_[i] = (float*) calloc(2 * net_->size_ * net_->size_, sizeof(float));
         CheckAlloc(op_times_[i], "p2p profiler operation time matrix");
     }
 
-    output = (float**) malloc(n_iter_ * sizeof(float*));
+    output = (float**) malloc(n_msg_ * sizeof(float*));
     if (net_->rank_ == 0) {
         CheckAlloc(output, "p2p profiler outputs");
-        for (int i = 0; i < n_iter_; i++) {
+        for (int i = 0; i < n_msg_; i++) {
             output[i] = (float*) calloc(2 * net_->size_ * net_->size_, sizeof(float));
             CheckAlloc(output[i], "p2p profiler output");
         }
@@ -36,7 +36,7 @@ void P2PUniProfiler::Initialize(GPUNetwork* network) {
 void P2PUniProfiler::ProfileOperation() {
     int idx, fg;
     
-    for (int iter = 0; iter < n_iter_; iter++) {
+    for (int iter = 0; iter < n_msg_; iter++) {
     for (int rank_1 = 0; rank_1 < (net_->size_ - 1); rank_1++) {
     for (int rank_2 = rank_1 + 1; rank_2 < net_->size_; rank_2++) {
     if (net_->rank_ == rank_1 || net_->rank_ == rank_2) {
@@ -58,12 +58,12 @@ void P2PUniProfiler::ProfileOperation() {
 };
 
 void P2PUniProfiler::GatherResults() {
-    for (int i = 0; i < n_iter_; i++) {
+    for (int i = 0; i < n_msg_; i++) {
         MPICHECK(MPI_Reduce(
             op_times_[i], output[i],
             2 * net_->size_ * net_->size_,
             MPI_FLOAT, MPI_SUM,
-            0, MPI_COMM_WORLD
+            0, net_->mpi_comm_
         ));
     }
 }
@@ -72,7 +72,7 @@ void P2PUniProfiler::PrintResults() {
     if (net_->rank_ == 0) {
         FILE* f = fopen("p2p_uni.csv", "w");
         fprintf(f, "n_bytes, from, to, min, max, avg\n");
-        for (int i = 0; i < n_iter_; i++) {
+        for (int i = 0; i < n_msg_; i++) {
         for (int j = 0; j < net_->size_; j++) {
         for (int k = 0; k < net_->size_; k++) {
         if (j != k) {
@@ -105,9 +105,9 @@ void P2PUniProfiler::OperationCall(int rank_1, int rank_2, int msg_size) {
 
 void P2PUniProfiler::SingleCall(int rank_1, int rank_2, int msg_size) {
     if (net_->rank_ == rank_1) {
-        NCCLCHECK(ncclSend(net_->buffer_, msg_size, ncclUint8, rank_2, net_->comms_[0], net_->streams_[0]));
+        NCCLCHECK(ncclSend(net_->buffer_, msg_size, ncclUint8, rank_2, net_->nccl_comm_, net_->stream_));
     } else if (net_->rank_ == rank_2) {
-        NCCLCHECK(ncclRecv(net_->buffer_, msg_size, ncclUint8, rank_1, net_->comms_[0], net_->streams_[0]));
+        NCCLCHECK(ncclRecv(net_->buffer_, msg_size, ncclUint8, rank_1, net_->nccl_comm_, net_->stream_));
     }
 }
 

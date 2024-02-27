@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "mpi.h"
 #include "nccl.h"
 
@@ -10,13 +12,17 @@ int main(int argc, char* argv[]) {
     GPUNetwork g;
     P2PUniProfiler p;
     g.Initialize();
-    p.Initialize(&g);
 
-    p.ProfileOperation();
-    p.GatherResults();
-    p.PrintResults();
+    if (g.comm_rank_ == 0) {
+        p.Initialize(&g);
 
-    p.Cleanup();
+        p.ProfileOperation();
+        p.GatherResults();
+        p.PrintResults();
+
+        p.Cleanup();
+    }
+
     g.Cleanup();
     MPI_Finalize();
     return 0;

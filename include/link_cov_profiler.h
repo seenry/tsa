@@ -14,6 +14,7 @@ public:
 private:
     void OperationCall(int rank_1, int rank_2, int msg_size);
     void SingleCall(int rank_1, int rank_2, int msg_size);
+    void GetVerticesFromEdge(int* v0_ptr, int* v1_ptr, int edge_index);
 
     int n_links_;
 };

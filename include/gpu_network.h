@@ -9,17 +9,20 @@ public:
 
     const int kBufferSize = 1 << 23;
 
+    int comm_rank_;
     int size_;
     int rank_;
 
-    ncclUniqueId ids_[2];
-    ncclComm_t comms_[2];
-    cudaStream_t streams_[2];
+    MPI_Comm mpi_comm_;
+
+    ncclUniqueId id_;
+    ncclComm_t nccl_comm_;
+    cudaStream_t stream_;
     char* buffer_;
     char* host_buffer_;
     cudaEvent_t start_timer_;
     cudaEvent_t stop_timer_;
 
 private:
-    void GetLocalRank();
+    void DetermineRank();
 };

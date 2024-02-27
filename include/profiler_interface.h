@@ -14,13 +14,13 @@ public:
     virtual void PrintResults() = 0;
 
     virtual void Cleanup() {
-        for (int i = 0; i < n_iter_; i++) {
+        for (int i = 0; i < n_msg_; i++) {
             free(op_times_[i]);
         }
         free(op_times_);
 
         if (net_->rank_ == 0) {
-            for (int i = 0; i < n_iter_; i++) {
+            for (int i = 0; i < n_msg_; i++) {
                 free(output[i]);
             }
             free(output);
@@ -33,12 +33,13 @@ protected:
         *address /= (float) scale;
     };
 
-    const int kTimingIters = 128;
-    const int kWarmupIters = 4;
+    const int kNRounds = 16;
+    const int kTimingIters = 64;
+    const int kWarmupIters = 8;
 
     GPUNetwork* net_;
 
     float** op_times_;
     float** output;
-    int n_iter_;
+    int n_msg_;
 };
