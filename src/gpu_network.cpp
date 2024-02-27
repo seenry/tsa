@@ -28,7 +28,7 @@ void GPUNetwork::Initialize() {
     MPICHECK(MPI_Bcast((void*) &(ids_[0]), sizeof(ids_[0]), MPI_BYTE, 0, MPI_COMM_WORLD));
     MPICHECK(MPI_Bcast((void*) &(ids_[1]), sizeof(ids_[1]), MPI_BYTE, 0, MPI_COMM_WORLD));
 
-    CUDACHECK(cudaSetDevice(local_rank_));
+    CUDACHECK(cudaSetDevice(local_rank));
     CUDACHECK(cudaMalloc(&buffer_, kBufferSize * sizeof(char)));
     // CUDACHECK(cudaMemset(buffer_, rank_, kBufferSize * sizeof(char)));
     CUDACHECK(cudaStreamCreate(&(streams_[0])));
@@ -68,9 +68,9 @@ void GPUNetwork::GetLocalRank() {
     hosthashes[rank_] = hosthash;
     MPICHECK(MPI_Allgather(MPI_IN_PLACE, 0, MPI_DATATYPE_NULL, hosthashes, sizeof(uint64_t), MPI_BYTE, MPI_COMM_WORLD));
 
-    local_rank_ = 0;
+    int local_rank = 0;
     for (int i = 0; i < size_; i++) {
         if (i == rank_) break;
-        if (hosthashes[i] == hosthashes[rank_]) local_rank_++;
+        if (hosthashes[i] == hosthashes[rank_]) local_rank++;
     }
 }

@@ -11,7 +11,6 @@ public:
 
     int size_;
     int rank_;
-    int local_rank_;
 
     ncclUniqueId ids_[2];
     ncclComm_t comms_[2];
