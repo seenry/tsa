@@ -13,4 +13,4 @@
 ###SBATCH --constraint="[quest5|quest6|quest8|quest9]" ### you want computers you have requested to be from either quest5 or quest6/7 or quest8 or quest 9 nodes, not a combination of nodes. Import for MPI, not usually import for job arrays)
 
 source set_env
-mpirun -n 32 -N 4 /projects/p31538/scr2448/tsa/links
+mpirun --map-by ppr:4:node ./links
